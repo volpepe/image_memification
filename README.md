@@ -6,3 +6,8 @@ Needs:
 - sklearn
 - PIL (? I used it in a portion of code that's not longer used in simplifier.py so it might be deleted)
 - uuhh that should be it
+
+Start with:
+```bash
+python.exe .\video_writer.py -i image_path -c n_colors -fn video_output_name
+```
