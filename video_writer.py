@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 from simplifier import simplify_image_kmeans
 import random
+import requests
 
 FPS = 500
 
@@ -16,7 +17,7 @@ def show_image(image, name="Image"):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", type=str, 
-                        required=True, help="path to image")
+                        required=True, help="path (or URL) to image")
     parser.add_argument("-c", "--colors", type=int,
                         default=10, help="number of colors")
     parser.add_argument("-fn", "--filename", type=str,
@@ -83,7 +84,13 @@ def main_loop(video_writer, image, w, h):
 
 def main():
     args = parse_args()
-    image = cv2.imread(args["image"])
+    # Treat image path as URL: if it's not, just open it
+    try:
+        resp = requests.get(args["image"])
+        image = np.asarray(bytearray(resp.content), dtype="uint8")
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    except requests.ConnectionError as exception:
+        image = cv2.imread(args["image"])    
     image = resize(image, 480, keep_ratio=True)
     image = simplify_image_kmeans(image, args["colors"])
     h, w = image.shape[0], image.shape[1]

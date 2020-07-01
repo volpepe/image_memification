@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import PIL
 from PIL import Image
 import argparse
 from sklearn.cluster import MiniBatchKMeans
@@ -8,7 +7,7 @@ from sklearn.cluster import MiniBatchKMeans
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image", type=str, 
-                        required=True, help="path to image")
+                        required=True, help="path (or URL) to image")
     parser.add_argument("-c", "--colors", type=int,
                         default=5, help="number of colors")
     args = parser.parse_args()
@@ -18,12 +17,20 @@ def image_PIL_to_opencv(pil_image):
     img = np.asarray(pil_image)
     result = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     return result
+    
+def get_image(URI):
+    try:
+        response = requests.get(URI)
+        img = Image.open(BytesIO(response.content))
+    except requests.ConnectionError as exception:
+        img = Image.open(URI)
+    return img
 
 def simplify_image_palette(img_path, colors):
-    image = PIL.Image.open(img_path)
-    result = image.convert('P', palette=PIL.Image.ADAPTIVE, colors=colors).convert('RGB')
+    image = get_image(img_path)
+    result = image.convert('P', palette=Image.ADAPTIVE, colors=colors).convert('RGB')
     result = image_PIL_to_opencv(result)
-    #result.show()
+    result.show()
     return result
 
 def simplify_image_kmeans(image, colors):
@@ -51,7 +58,7 @@ def simplify_image_kmeans(image, colors):
 
 def main():
     args = parse_args()
-    result = simplify_image_kmeans(args["image"], args["colors"])
+    result = simplify_image_kmeans(get_image(args["image"]), args["colors"])
     cv2.imshow("result", result)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

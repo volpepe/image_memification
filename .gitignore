@@ -1,3 +1,4 @@
 *.avi
 .vs/*
 imgs/*
+__pycache__/*
